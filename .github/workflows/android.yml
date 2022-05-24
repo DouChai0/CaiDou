@@ -1,0 +1,29 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: set up JDK 11
+      uses: actions/setup-java@v2
+      with:
+        java-version: '11'
+        distribution: 'adopt'
+        cache: gradle
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+    - name: Build with Gradle
+      run: ./gradlew :app:assembleRelease
+    - name: Write Commit Message To File
+      run: |
+         cat << ENDOFCOMMIT > ./app/build/outputs/apk/release/commit.txt
+         ${{ github.event.head_commit.message }}
+         ENDOFCOMMIT

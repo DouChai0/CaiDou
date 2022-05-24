@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_marginBottom="1dp"
+    android:layout_height="30dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical|left"
+        android:id="@+id/ShowText"
+        android:textSize="20dp"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+
+        ></TextView>
+    
+    <com.ldq.connect.UIPath.ItemUI.SwitchButton
+        android:layout_centerInParent="true"
+        android:layout_alignParentRight="true"
+        android:layout_width="45dp"
+        android:layout_height="25dp"
+        android:id="@+id/button"
+        app:borderWidth="0.8dp"
+        app:offBorderColor="#A4A4A4"
+        app:offColor="#FAFAFA"
+        app:onColor="#2ECCFA"
+        app:spotColor="#E0F8E0"
+        app:animate="true"
+        android:layout_margin="20dp"></com.ldq.connect.UIPath.ItemUI.SwitchButton>
+
+</RelativeLayout>
