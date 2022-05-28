@@ -26,28 +26,17 @@ public class Hook_Change_Dev_Info {
             ChangeInfo = MConfig.Get_String("Main","MainSet","DevInfo");
             if(!TextUtils.isEmpty(ChangeInfo.trim())){
                 MField.SetField(null, Build.class,"MODEL",ChangeInfo);
-                try{
-                    XposedHelpers.findAndHookMethod(MClass.loadClass("com.tencent.mobileqq.Pandora.deviceInfo.DeviceInfoManager"), "getModel",
-                            Context.class, new XC_MethodHook() {
-                                @Override
-                                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                                    super.afterHookedMethod(param);
-                                    param.setResult(ChangeInfo);
-                                }
+                XposedHelpers.findAndHookMethod(MClass.loadClass("com.tencent.qmethod.pandoraex.monitor.DeviceInfoMonitor"), "getModel",
+                         new XC_MethodHook() {
+                            @Override
+                            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                                super.afterHookedMethod(param);
+                                param.setResult(ChangeInfo);
+//                                Object result = param.getResult();
+//                                Utils.ShowToast("RESULT: " + result);
                             }
-                    );
-                }catch (Throwable th){
-                    XposedHelpers.findAndHookMethod(MClass.loadClass("com.tencent.mobileqq.pandora.deviceinfo.DeviceInfoManager"), "h",
-                            Context.class, new XC_MethodHook() {
-                                @Override
-                                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                                    super.afterHookedMethod(param);
-                                    param.setResult(ChangeInfo);
-                                }
-                            }
-                    );
-                }
-
+                        }
+                );
             }
 
 
