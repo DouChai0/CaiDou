@@ -52,7 +52,7 @@ public class Hook_For_Common_Msg_Long_Click
     public static void Start() throws ClassNotFoundException {
         //涂鸦转发
         try{
-            Method med = GetItemBuilderMenuBuilder(MClass.loadClass("com.tencent.mobileqq.activity.aio.item.ScribbleItemBuilder"),"a");
+            Method med = GetItemBuilderMenuBuilder(MClass.loadClass("com.tencent.mobileqq.activity.aio.item.ScribbleItemBuilder"),"d");
             XposedBridge.hookMethod(med, new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) throws Throwable {
@@ -82,127 +82,129 @@ public class Hook_For_Common_Msg_Long_Click
             Method InvokeMethod = MMethod.FindMethod("com.tencent.mobileqq.activity.aio.item.ScribbleItemBuilder","a",void.class,new Class[]{
                     int.class,Context.class, MClass.loadClass("com.tencent.mobileqq.data.ChatMessage")
             });
-            XposedBridge.hookMethod(InvokeMethod, new XC_MethodHook() {
-                @Override
-                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                    super.beforeHookedMethod(param);
-                    int InvokeID = (int) param.args[0];
-                    Context mContext = (Context) param.args[1];
-                    Object ChatMsg = param.args[2];
-                    if(InvokeID==1888)
-                    {
-                        try{
-                            ArrayList<JavaPluginUtils.GroupInfo> GroupList = JavaPluginUtils.GetGroupInfo();
-                            String[] ItemName = new String[GroupList.size()];
-                            boolean[] ItemCheck = new boolean[GroupList.size()];
-                            for(int i=0;i<GroupList.size();i++) ItemName[i] = GroupList.get(i).GroupName+"("+GroupList.get(i).GroupUin+")";
-                            AlertDialog.Builder mBuilder = new AlertDialog.Builder(mContext,AlertDialog.THEME_HOLO_LIGHT);
-                            mBuilder.setTitle("选择转发到的群");
-                            mBuilder.setMultiChoiceItems(ItemName, ItemCheck, new DialogInterface.OnMultiChoiceClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which, boolean isChecked) {
-
-                                }
-                            });
-                            mBuilder.setPositiveButton("确定转发", (dialog, which) -> {
-                                try{
-                                    for(int i=0;i<ItemCheck.length;i++)
-                                    {
-                                        if(ItemCheck[i]==true)
-                                        {
-
-                                            String GroupUin = GroupList.get(i).GroupUin;
-                                            Object WillingSend = MessageRecoreFactory.CopyToTYMessage(ChatMsg,GroupUin);
-                                            BaseCall.AddAndSendMsg(WillingSend);
-                                        }
-                                    }
-                                }
-                                catch (Throwable th)
-                                {
-                                    Utils.ShowToast("发送失败"+th);
-                                }
-
-                            });
-                            mBuilder.show();
-                        }
-                        catch (Throwable th)
+            if (InvokeMethod != null) {
+                XposedBridge.hookMethod(InvokeMethod, new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        super.beforeHookedMethod(param);
+                        int InvokeID = (int) param.args[0];
+                        Context mContext = (Context) param.args[1];
+                        Object ChatMsg = param.args[2];
+                        if(InvokeID==1888)
                         {
-                            Utils.ShowToast("发送失败"+th);
-                        }
-
-                    }
-                    if(InvokeID==2333)
-                    {
-                        EditText med = new EditText(mContext);
-                        med.setTextColor(Color.BLACK);
-                        med.setTextSize(20);
-                        new AlertDialog.Builder(mContext,3)
-                                .setTitle("输入保存的文件名")
-                                .setView(med)
-                                .setNegativeButton("确定保存", new DialogInterface.OnClickListener() {
+                            try{
+                                ArrayList<JavaPluginUtils.GroupInfo> GroupList = JavaPluginUtils.GetGroupInfo();
+                                String[] ItemName = new String[GroupList.size()];
+                                boolean[] ItemCheck = new boolean[GroupList.size()];
+                                for(int i=0;i<GroupList.size();i++) ItemName[i] = GroupList.get(i).GroupName+"("+GroupList.get(i).GroupUin+")";
+                                AlertDialog.Builder mBuilder = new AlertDialog.Builder(mContext,AlertDialog.THEME_HOLO_LIGHT);
+                                mBuilder.setTitle("选择转发到的群");
+                                mBuilder.setMultiChoiceItems(ItemName, ItemCheck, new DialogInterface.OnMultiChoiceClickListener() {
                                     @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        try {
-                                            String mPath = MField.GetField(ChatMsg, ChatMsg.getClass(), "localFildPath", String.class);
-                                            String MD5 = MField.GetField(ChatMsg, ChatMsg.getClass(), "combineFileMd5", String.class);
-                                            String LocalCachePath = Environment.getExternalStorageDirectory()+"/Android/data/com.tencent.mobileqq/Tencent/MobileQQ/Scribble/ScribbleCache/"+MD5;
-
-
-                                            String FileName = med.getText().toString();
-                                            if (TextUtils.isEmpty(mPath) && !new File(LocalCachePath).exists()) {
-                                                String mName = "" + System.currentTimeMillis();
-                                                MHookEnvironment.mTask.PostTaskAndWait(() -> {
-                                                            try {
-                                                                HttpUtils.downlaodFile(MField.GetField(ChatMsg, ChatMsg.getClass(), "combineFileUrl", 3), MHookEnvironment.MAppContext.getExternalCacheDir().getPath() + "/", mName);
-                                                            } catch (Exception e) {
-                                                                e.printStackTrace();
-                                                            }
-                                                        }
-                                                );
-                                                mPath = MHookEnvironment.MAppContext.getExternalCacheDir().getPath() + "/" + mName;
-                                            }
-
-                                            if(TextUtils.isEmpty(mPath) && new File(LocalCachePath).exists())
-                                            {
-                                                mPath = LocalCachePath;
-                                            }
-
-                                            HookRecallMsg.TYSave mSave = new HookRecallMsg.TYSave();
-                                            mSave.GIFId = MField.GetField(ChatMsg, "gifId", int.class);
-                                            mSave.CombineUrlPath = MField.GetField(ChatMsg, "combineFileUrl", String.class);
-                                            mSave.offSet = MField.GetField(ChatMsg, "offSet", int.class);
-                                            //Utils.ShowToast(mPath);
-                                            mSave.sData = FileUtils.ReadFileByte(mPath);
-                                            if (new File(mPath + "_data").exists())
-                                            {
-                                                mSave.sShowData = FileUtils.ReadFileByte(mPath + "_data");
-                                            }
-
-                                            if(mSave.sData.length<10)
-                                            {
-                                                Utils.ShowToast("保存失败,缺失数据文件");
-                                                return;
-                                            }
-
-                                            ByteArrayOutputStream mout = new ByteArrayOutputStream();
-                                            ObjectOutputStream oop = new ObjectOutputStream(mout);
-                                            oop.writeObject(mSave);
-                                            String Path = MHookEnvironment.PublicStorageModulePath + "涂鸦保存/"+FileName;
-                                            FileUtils.WriteFileByte(Path,mout.toByteArray());
-                                            oop.close();
-                                            Utils.ShowToast("已保存到"+Path);
-                                        }catch (Throwable th)
-                                        {
-                                            MLogCat.Print_Error("SaveTY",th);
-                                        }
+                                    public void onClick(DialogInterface dialog, int which, boolean isChecked) {
 
                                     }
-                                }).show();
-                    }
-                }
-            });
+                                });
+                                mBuilder.setPositiveButton("确定转发", (dialog, which) -> {
+                                    try{
+                                        for(int i=0;i<ItemCheck.length;i++)
+                                        {
+                                            if(ItemCheck[i]==true)
+                                            {
 
-            med = GetItemBuilderMenuBuilder(MClass.loadClass("com.tencent.mobileqq.activity.aio.item.PttItemBuilder"),"a");
+                                                String GroupUin = GroupList.get(i).GroupUin;
+                                                Object WillingSend = MessageRecoreFactory.CopyToTYMessage(ChatMsg,GroupUin);
+                                                BaseCall.AddAndSendMsg(WillingSend);
+                                            }
+                                        }
+                                    }
+                                    catch (Throwable th)
+                                    {
+                                        Utils.ShowToast("发送失败"+th);
+                                    }
+
+                                });
+                                mBuilder.show();
+                            }
+                            catch (Throwable th)
+                            {
+                                Utils.ShowToast("发送失败"+th);
+                            }
+
+                        }
+                        if(InvokeID==2333)
+                        {
+                            EditText med = new EditText(mContext);
+                            med.setTextColor(Color.BLACK);
+                            med.setTextSize(20);
+                            new AlertDialog.Builder(mContext,3)
+                                    .setTitle("输入保存的文件名")
+                                    .setView(med)
+                                    .setNegativeButton("确定保存", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            try {
+                                                String mPath = MField.GetField(ChatMsg, ChatMsg.getClass(), "localFildPath", String.class);
+                                                String MD5 = MField.GetField(ChatMsg, ChatMsg.getClass(), "combineFileMd5", String.class);
+                                                String LocalCachePath = Environment.getExternalStorageDirectory()+"/Android/data/com.tencent.mobileqq/Tencent/MobileQQ/Scribble/ScribbleCache/"+MD5;
+
+
+                                                String FileName = med.getText().toString();
+                                                if (TextUtils.isEmpty(mPath) && !new File(LocalCachePath).exists()) {
+                                                    String mName = "" + System.currentTimeMillis();
+                                                    MHookEnvironment.mTask.PostTaskAndWait(() -> {
+                                                                try {
+                                                                    HttpUtils.downlaodFile(MField.GetField(ChatMsg, ChatMsg.getClass(), "combineFileUrl", 3), MHookEnvironment.MAppContext.getExternalCacheDir().getPath() + "/", mName);
+                                                                } catch (Exception e) {
+                                                                    e.printStackTrace();
+                                                                }
+                                                            }
+                                                    );
+                                                    mPath = MHookEnvironment.MAppContext.getExternalCacheDir().getPath() + "/" + mName;
+                                                }
+
+                                                if(TextUtils.isEmpty(mPath) && new File(LocalCachePath).exists())
+                                                {
+                                                    mPath = LocalCachePath;
+                                                }
+
+                                                HookRecallMsg.TYSave mSave = new HookRecallMsg.TYSave();
+                                                mSave.GIFId = MField.GetField(ChatMsg, "gifId", int.class);
+                                                mSave.CombineUrlPath = MField.GetField(ChatMsg, "combineFileUrl", String.class);
+                                                mSave.offSet = MField.GetField(ChatMsg, "offSet", int.class);
+                                                //Utils.ShowToast(mPath);
+                                                mSave.sData = FileUtils.ReadFileByte(mPath);
+                                                if (new File(mPath + "_data").exists())
+                                                {
+                                                    mSave.sShowData = FileUtils.ReadFileByte(mPath + "_data");
+                                                }
+
+                                                if(mSave.sData.length<10)
+                                                {
+                                                    Utils.ShowToast("保存失败,缺失数据文件");
+                                                    return;
+                                                }
+
+                                                ByteArrayOutputStream mout = new ByteArrayOutputStream();
+                                                ObjectOutputStream oop = new ObjectOutputStream(mout);
+                                                oop.writeObject(mSave);
+                                                String Path = MHookEnvironment.PublicStorageModulePath + "涂鸦保存/"+FileName;
+                                                FileUtils.WriteFileByte(Path,mout.toByteArray());
+                                                oop.close();
+                                                Utils.ShowToast("已保存到"+Path);
+                                            }catch (Throwable th)
+                                            {
+                                                MLogCat.Print_Error("SaveTY",th);
+                                            }
+
+                                        }
+                                    }).show();
+                        }
+                    }
+                });
+            }
+
+            med = GetItemBuilderMenuBuilder(MClass.loadClass("com.tencent.mobileqq.activity.aio.item.PttItemBuilder"),"d");
             XposedBridge.hookMethod(med, new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) throws Throwable {
@@ -304,7 +306,7 @@ public class Hook_For_Common_Msg_Long_Click
 
             //图片的
 
-            med = GetItemBuilderMenuBuilder(MClass.loadClass("com.tencent.mobileqq.activity.aio.item.BasePicItemBuilder"),"a");
+            med = GetItemBuilderMenuBuilder(MClass.loadClass("com.tencent.mobileqq.activity.aio.item.BasePicItemBuilder"),"d");
             XposedBridge.hookMethod(med, new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) throws Throwable {
@@ -457,7 +459,7 @@ public class Hook_For_Common_Msg_Long_Click
 
             //图文的
 
-            med = GetItemBuilderMenuBuilder(MClass.loadClass("com.tencent.mobileqq.activity.aio.item.MixedMsgItemBuilder"),"a");
+            med = GetItemBuilderMenuBuilder(MClass.loadClass("com.tencent.mobileqq.activity.aio.item.MixedMsgItemBuilder"),"b");
             XposedBridge.hookMethod(med, new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) throws Throwable {
